@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>translations/bmsgui_ko.qm</file>
+    <file>ui/about_license.txt</file>
+</qresource>
+</RCC>

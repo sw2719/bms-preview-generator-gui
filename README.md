@@ -15,5 +15,5 @@ This is a GUI frontend for [MikiraSora's BmsPreviewAudioGenerator](https://githu
     - The BmsPreviewAudioGenerator folder should be inside the program directory, not its contents.
 4. Run BmsPreviewAudioGeneratorGUI.exe.
 5. Add directories containg BMS. You can just drag and drop folders inside the directory list. Alternatively, click 'Add' button to open folder dialog if you prefer it that way.
-   - Preview audio files are generated in parallel, so spliting directories as much as possible are recommended to speed up the generation.
+   - Preview audio files are generated in parallel, so spliting directories as much as possible is recommended to speed up the generation.
 6. Adjust generator options if needed, and click 'Start' button.

@@ -7,15 +7,21 @@ import os
 import re
 import shlex
 import argparse
+import threading
+import time
+import zipfile
 import requests
 
 from functools import partial
 from typing import Dict, List
 from packaging import version
+from pefile import PE
 
 from PySide6.QtCore import Qt, QProcess, QLibraryInfo, QTranslator, QLocale, QThread, Signal, QIODevice, QFile, QTextStream
-from PySide6.QtWidgets import QApplication, QMainWindow, QListWidget, QMessageBox, QFileDialog, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QListWidget, QMessageBox, QFileDialog, QWidget, QProgressDialog
 import qdarktheme
+from pypdl import Pypdl
+from pypdl.utls import default_logger
 
 from ui.ui_main import Ui_MainWindow
 from ui.ui_about import Ui_AboutForm
@@ -33,16 +39,14 @@ DEFAULT_END = '40000'
 DEFAULT_FADE_IN = '1000'
 DEFAULT_FADE_OUT = '2000'
 DEFAULT_FILE_NAME = "preview_auto_generated.ogg"
+CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
-def get_generator():
-    for directory in os.listdir(os.path.dirname(__file__)):
-        if os.path.isdir(directory) and 'BmsPreviewAudioGenerator.exe' in os.listdir(directory):
-            path = os.path.join(directory, 'BmsPreviewAudioGenerator.exe')
-            print(path)
-            return path
-    else:
-        return None
+# WIP
+class Generator:
+    def __init__(self, path: str, version: str):
+        self.path = path
+        self.version = version
 
 
 class UpdateThread(QThread):
@@ -58,6 +62,41 @@ class UpdateThread(QThread):
 
         except (requests.RequestException, requests.JSONDecodeError) as e:
             self.completed.emit(False, "", e)
+
+
+class ExtractThread(QThread):
+    completed = Signal(bool)
+
+    def __init__(self, path: str, **kwargs):
+        super().__init__(**kwargs)
+        self.path = path
+
+    def run(self):
+        print('Extract thread start')
+        while True:
+            try:
+                with zipfile.ZipFile(self.path, 'r') as zip_ref:
+                    zip_ref.extractall(f"{CURRENT_PATH}/BmsPreviewAudioGenerator0.9.9.7/")
+
+                os.remove(self.path)
+                self.completed.emit(True)
+
+            except zipfile.BadZipFile:
+                time.sleep(1)
+                continue
+            break
+
+
+
+def get_generator() -> str:
+    for directory in os.listdir(os.path.dirname(__file__)):
+        if os.path.isdir(directory) and 'BmsPreviewAudioGenerator.exe' in os.listdir(directory):
+            path = os.path.join(directory, 'BmsPreviewAudioGenerator.exe')
+            print(path)
+            return path
+
+    else:
+        return None
 
 
 class BmsPreviewAudioGeneratorGUI(QApplication):
@@ -85,22 +124,6 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.directories: List[str] = []
         self.processes: Dict[str, QProcess] = {}
-
-        self.generator = get_generator()
-
-        if not self.generator and not nocheck:
-            msgbox = QMessageBox()
-            msgbox.setIcon(QMessageBox.Icon.Critical)
-            msgbox.setWindowTitle(self.tr('Error'))
-            msgbox.setTextFormat(Qt.TextFormat.RichText)
-
-            msgbox.setText(self.tr(
-                "BmsPreviewAudioGenerator.exe not found.<br>"
-                "Refer to <a href='{0}'>GitHub README</a> for more information.<br><br>"
-                "Program will now exit.").format(REPO_URL))
-
-            msgbox.exec()
-            sys.exit(1)
 
         self.ui.output_textedit.setReadOnly(True)
 
@@ -150,6 +173,10 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.ui.progressbar.hide()
 
+        self.main_window.show()
+
+        self.generator = get_generator()
+
         if nocheck:
             self.print(self.tr('nocheck is enabled.'))
 
@@ -158,13 +185,67 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         else:
             self.print(self.tr('BmsPreviewAudioGenerator.exe was not found.'))
 
-        self.main_window.show()
+        if not self.generator and not nocheck:
+            self.download_generator()
 
     def print(self, text: str):
         self.ui.output_textedit.appendPlainText(text)
 
     def clear(self):
         self.ui.output_textedit.clear()
+
+    def download_generator(self):
+        msgbox = QMessageBox()
+        msgbox.setIcon(QMessageBox.Icon.Warning)
+
+        msgbox.setText(self.tr(
+            "BmsPreviewAudioGenerator.exe not found. Download now?"))
+        msgbox.setInformativeText(self.tr(
+            "BmsPreviewAudioGenerator.exe is required to generate audio previews."))
+        msgbox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+
+        if msgbox.exec() == QMessageBox.StandardButton.Yes:
+            progress = QProgressDialog(self.tr("Downloading..."), self.tr("Cancel"), 0, 100, self.main_window)
+            progress.setWindowModality(Qt.WindowModal)
+            progress.forceShow()
+
+            dl = Pypdl(allow_reuse=False, logger=default_logger("Pypdl"))
+            dl.start(
+                url='https://github.com/MikiraSora/BmsPreviewAudioGenerator/releases/download/v0.9.9.7/BmsPreviewAudioGenerator0.9.9.7.zip',
+                file_path=CURRENT_PATH,
+                segments=4,
+                display=False,
+                multisegment=True,
+                block=False,
+                retries=0,
+                mirror_func=None,
+                etag=True,
+                overwrite=True
+            )
+
+            # print the progress
+            while dl.progress < 100:
+                progress.setValue(dl.progress)
+                if progress.wasCanceled():
+                    dl.stop()
+                    sys.exit()
+
+            progress.setValue(99)
+            progress.setCancelButton(None)
+            progress.setLabelText(self.tr("Extracting..."))
+
+            def on_extract_finish():
+                progress.accept()
+                self.generator = get_generator()
+                if self.generator:
+                    self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
+
+            extract_thread = ExtractThread(f"{CURRENT_PATH}/BmsPreviewAudioGenerator0.9.9.7.zip")
+            extract_thread.completed.connect(on_extract_finish)
+            extract_thread.start()
+
+        else:
+            sys.exit()
 
     def check_for_updates(self):
         update_thread = UpdateThread(self)

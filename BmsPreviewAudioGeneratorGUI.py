@@ -5,8 +5,9 @@
 import sys
 import os
 import re
-import requests
 import shlex
+import argparse
+import requests
 
 from functools import partial
 from typing import Dict, List
@@ -60,7 +61,7 @@ class UpdateThread(QThread):
 
 
 class BmsPreviewAudioGeneratorGUI(QApplication):
-    def __init__(self):
+    def __init__(self, nocheck: bool):
         super().__init__(sys.argv)
         qdarktheme.setup_theme("auto")
 
@@ -87,7 +88,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.generator = get_generator()
 
-        if not self.generator:
+        if not self.generator and not nocheck:
             msgbox = QMessageBox()
             msgbox.setIcon(QMessageBox.Icon.Critical)
             msgbox.setWindowTitle(self.tr('Error'))
@@ -137,8 +138,8 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.dir_listwidget.fileDropped.connect(self.add_directories)
 
         self.ui.action_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.ui.action_button.clicked.connect(self.start)
         self.ui.action_button.setEnabled(False)
+        self.ui.action_button.clicked.connect(self.start)
 
         self.ui.start_edit.setText(DEFAULT_START)
         self.ui.end_edit.setText(DEFAULT_END)
@@ -149,7 +150,14 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.ui.progressbar.hide()
 
-        self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
+        if nocheck:
+            self.print(self.tr('nocheck is enabled.'))
+
+        if self.generator:
+            self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
+        else:
+            self.print(self.tr('BmsPreviewAudioGenerator.exe was not found.'))
+
         self.main_window.show()
 
     def print(self, text: str):
@@ -217,6 +225,10 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
             self.add_directories([directory])
 
     def start(self):
+        if not self.generator:
+            self.print(self.tr('Unable to generate because BmsPreviewAudioGenerator.exe was not found.'))
+            return
+
         self.clear()
         self.ui.dir_listwidget.setAcceptDrops(False)
         self.ui.dir_listwidget.currentItemChanged.disconnect(self.update_button_status)
@@ -326,6 +338,13 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.remove_button.setEnabled(False)
 
 
-if __name__ == '__main__':
-    bms_gui = BmsPreviewAudioGeneratorGUI()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--nocheck', action='store_true', help='Do not check for BmsPreviewAudioGenerator.exe')
+    args = parser.parse_args()
+    bms_gui = BmsPreviewAudioGeneratorGUI(args.nocheck)
     sys.exit(bms_gui.exec())
+
+
+if __name__ == '__main__':
+    main()

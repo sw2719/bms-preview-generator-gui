@@ -14,6 +14,8 @@ import requests
 
 from functools import partial
 from typing import Dict, List
+
+from numpy.version import release
 from packaging import version
 from pefile import PE
 
@@ -28,8 +30,9 @@ from ui.ui_about import Ui_AboutForm
 from ui.ui_license import Ui_LicenseForm
 
 import resources  # noqa
+from util.github import get_latest_release
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 CHECK_API_URL = 'https://api.github.com/repos/sw2719/bms-preview-generator-gui/releases/latest'
 RELEASES_URL = 'https://github.com/sw2719/bms-preview-generator-gui/releases'
 REPO_URL = 'https://github.com/sw2719/bms-preview-generator-gui'
@@ -76,27 +79,16 @@ class ExtractThread(QThread):
         while True:
             try:
                 with zipfile.ZipFile(self.path, 'r') as zip_ref:
-                    zip_ref.extractall(f"{CURRENT_PATH}/BmsPreviewAudioGenerator0.9.9.7/")
+                    zip_ref.extractall(f"{CURRENT_PATH}/BmsPreviewAudioGenerator/")
 
                 os.remove(self.path)
-                self.completed.emit(True)
+                break
 
             except zipfile.BadZipFile:
                 time.sleep(1)
                 continue
-            break
 
-
-
-def get_generator() -> str:
-    for directory in os.listdir(os.path.dirname(__file__)):
-        if os.path.isdir(directory) and 'BmsPreviewAudioGenerator.exe' in os.listdir(directory):
-            path = os.path.join(directory, 'BmsPreviewAudioGenerator.exe')
-            print(path)
-            return path
-
-    else:
-        return None
+        self.completed.emit(True)
 
 
 class BmsPreviewAudioGeneratorGUI(QApplication):
@@ -115,6 +107,8 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         if translator.load(QLocale.system(), 'bmsgui', '_', path):
             self.installTranslator(translator)
+
+        self.threads = []
 
         self.main_window = QMainWindow()
 
@@ -175,18 +169,24 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.main_window.show()
 
-        self.generator = get_generator()
+        self.generator = None
+        self.get_generator()
 
         if nocheck:
             self.print(self.tr('nocheck is enabled.'))
 
-        if self.generator:
-            self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
-        else:
-            self.print(self.tr('BmsPreviewAudioGenerator.exe was not found.'))
-
         if not self.generator and not nocheck:
-            self.download_generator()
+            msgbox = QMessageBox(parent=self.main_window)
+            msgbox.setIcon(QMessageBox.Icon.Warning)
+
+            msgbox.setText(self.tr(
+                "BmsPreviewAudioGenerator.exe not found. Download now?"))
+            msgbox.setInformativeText(self.tr(
+                "BmsPreviewAudioGenerator.exe is required to generate audio previews."))
+            msgbox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+
+            if msgbox.exec() == QMessageBox.StandardButton.Yes:
+                self.download_generator()
 
     def print(self, text: str):
         self.ui.output_textedit.appendPlainText(text)
@@ -194,58 +194,73 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
     def clear(self):
         self.ui.output_textedit.clear()
 
-    def download_generator(self):
-        msgbox = QMessageBox()
-        msgbox.setIcon(QMessageBox.Icon.Warning)
-
-        msgbox.setText(self.tr(
-            "BmsPreviewAudioGenerator.exe not found. Download now?"))
-        msgbox.setInformativeText(self.tr(
-            "BmsPreviewAudioGenerator.exe is required to generate audio previews."))
-        msgbox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-
-        if msgbox.exec() == QMessageBox.StandardButton.Yes:
-            progress = QProgressDialog(self.tr("Downloading..."), self.tr("Cancel"), 0, 100, self.main_window)
-            progress.setWindowModality(Qt.WindowModal)
-            progress.forceShow()
-
-            dl = Pypdl(allow_reuse=False, logger=default_logger("Pypdl"))
-            dl.start(
-                url='https://github.com/MikiraSora/BmsPreviewAudioGenerator/releases/download/v0.9.9.7/BmsPreviewAudioGenerator0.9.9.7.zip',
-                file_path=CURRENT_PATH,
-                segments=4,
-                display=False,
-                multisegment=True,
-                block=False,
-                retries=0,
-                mirror_func=None,
-                etag=True,
-                overwrite=True
-            )
-
-            # print the progress
-            while dl.progress < 100:
-                progress.setValue(dl.progress)
-                if progress.wasCanceled():
-                    dl.stop()
-                    sys.exit()
-
-            progress.setValue(99)
-            progress.setCancelButton(None)
-            progress.setLabelText(self.tr("Extracting..."))
-
-            def on_extract_finish():
-                progress.accept()
-                self.generator = get_generator()
-                if self.generator:
-                    self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
-
-            extract_thread = ExtractThread(f"{CURRENT_PATH}/BmsPreviewAudioGenerator0.9.9.7.zip")
-            extract_thread.completed.connect(on_extract_finish)
-            extract_thread.start()
+    def get_generator(self) -> str | None:
+        # TODO: Get program version
+        for directory in os.listdir(CURRENT_PATH):
+            if os.path.isdir(directory) and 'BmsPreviewAudioGenerator.exe' in os.listdir(directory):
+                path = os.path.join(directory, 'BmsPreviewAudioGenerator.exe')
+                print(path)
+                self.generator = path
+                self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
 
         else:
-            sys.exit()
+            return None
+
+    def download_generator(self):
+        try:
+            release = get_latest_release()
+
+        except requests.HTTPError:
+            QMessageBox.critical(self.main_window, self.tr('Error'), self.tr('Failed to download BmsPreviewAudioGenerator.\nPlease try again or manually download.'))
+            sys.exit(1)
+
+        file_name = release['asset_name']
+        url = release['asset_url']
+
+        progress = QProgressDialog(self.tr("Downloading {0}...".format(file_name)), "", 0, 100, parent=self.main_window)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setCancelButton(None)
+        progress.forceShow()
+
+        dl = Pypdl(allow_reuse=False, logger=default_logger("Pypdl"))
+        dl.start(
+            url=url,
+            file_path=CURRENT_PATH,
+            segments=4,
+            display=False,
+            multisegment=False,
+            block=False,
+            retries=0,
+            mirror_func=None,
+            etag=True,
+            overwrite=True
+        )
+
+        # print the progress
+        while dl.progress < 100:
+            progress.setValue(dl.progress)
+            if progress.wasCanceled():
+                dl.stop()
+                sys.exit()
+
+        progress.setValue(99)
+        progress.setLabelText(self.tr("Extracting..."))
+
+        def on_extract_finish():
+            nonlocal progress
+            nonlocal extract_thread
+
+            # do cleanup stuff
+            progress.accept()
+            self.threads.remove(extract_thread)
+            extract_thread.deleteLater()
+            self.get_generator()
+
+        extract_thread = ExtractThread(f"{CURRENT_PATH}/{file_name}")
+        extract_thread.completed.connect(on_extract_finish)
+        extract_thread.start()
+
+        self.threads.append(extract_thread)
 
     def check_for_updates(self):
         update_thread = UpdateThread(self)

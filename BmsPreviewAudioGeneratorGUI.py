@@ -42,6 +42,7 @@ DEFAULT_FADE_IN = '1000'
 DEFAULT_FADE_OUT = '2000'
 DEFAULT_FILE_NAME = "preview_auto_generated.ogg"
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
+CORE_COUNT = os.cpu_count()
 
 
 # WIP
@@ -157,11 +158,15 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.action_button.setEnabled(False)
         self.ui.action_button.clicked.connect(self.start)
 
+        self.ui.thread_auto_checkbox.clicked.connect(
+            lambda: self.ui.thread_spinbox.setReadOnly(self.ui.thread_auto_checkbox.isChecked()))
+
         self.ui.start_edit.setText(DEFAULT_START)
         self.ui.end_edit.setText(DEFAULT_END)
         self.ui.fade_in_edit.setText(DEFAULT_FADE_IN)
         self.ui.fade_out_edit.setText(DEFAULT_FADE_OUT)
         self.ui.filename_edit.setText(DEFAULT_FILE_NAME)
+        self.ui.thread_spinbox.setValue(CORE_COUNT)
         self.ui.param_edit.setText('')
 
         self.ui.progressbar.hide()
@@ -411,7 +416,8 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
                 f'-save_name="{save_name}"',
                 '-support_extend_format',
                 f'-fade_in="{fade_in}"',
-                f'-fade_out="{fade_out}"'
+                f'-fade_out="{fade_out}"',
+                f'-thread={self.ui.thread_spinbox.value()}'
             ]
 
             arguments = arguments + shlex.split(self.ui.param_edit.text())

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainILDgWv.ui'
+## Form generated from reading UI file 'mainErHnqT.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.5.3
 ##
@@ -203,6 +203,11 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4.addWidget(self.progressbar)
 
+        self.progress_label = QLabel(self.centralwidget)
+        self.progress_label.setObjectName(u"progress_label")
+
+        self.horizontalLayout_4.addWidget(self.progress_label)
+
         self.action_button = QPushButton(self.centralwidget)
         self.action_button.setObjectName(u"action_button")
 
@@ -277,6 +282,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.param_edit.setPlaceholderText("")
         self.label.setText(QCoreApplication.translate("MainWindow", u"Output", None))
+        self.progress_label.setText(QCoreApplication.translate("MainWindow", u"0/0", None))
         self.action_button.setText(QCoreApplication.translate("MainWindow", u"Start", None))
         self.menu.setTitle(QCoreApplication.translate("MainWindow", u"Menu", None))
     # retranslateUi

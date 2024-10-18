@@ -23,6 +23,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QListWidget, QMessageBo
 import qdarktheme
 from pypdl import Pypdl
 from pypdl.utls import default_logger
+from yt_dlp.plugins import directories
 
 from ui.ui_main import Ui_MainWindow
 from ui.ui_about import Ui_AboutForm
@@ -117,7 +118,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.main_window.setWindowTitle(self.main_window.windowTitle() + f' (Version {VERSION})')
 
         self.directories: List[str] = []
-        self.processes: Dict[str, QProcess] = {}
+        self.processes: List[QProcess] = []
 
         self.ui.output_textedit.setReadOnly(True)
 
@@ -170,6 +171,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.param_edit.setText('')
 
         self.ui.progressbar.hide()
+        self.ui.progress_label.hide()
 
         self.main_window.show()
 
@@ -343,17 +345,9 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.ui.progressbar.setMaximum(0)
         self.ui.progressbar.show()
+        self.ui.progress_label.setText(f"1/{len(self.directories)}")
+        self.ui.progress_label.show()
         progress_pattern = r'(\d+\/\d+)\s+\((\d+\.\d+%)\)'
-        progresses = {}
-
-        def update_progressbar():
-            if len(progresses) == len(self.directories):
-                if not self.ui.progressbar.maximum():
-                    total = sum([int(p.split('/')[1]) for p in progresses.values()])
-                    self.ui.progressbar.setMaximum(total)
-
-                progress = sum([int(p.split('/')[0]) for p in progresses.values()])
-                self.ui.progressbar.setValue(progress)
 
         def read_output(process: QProcess, item_index: int):
             data = process.readAllStandardOutput().data()
@@ -367,8 +361,14 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
                 path = self.directories[item_index]
                 self.ui.dir_listwidget.item(item_index).setText(f'{path} - {progress.group(1)} ({progress.group(2)})')
 
-                progresses[path] = progress.group(1)
-                update_progressbar()
+                item_progress = progress.group(1).split('/')  # format: done/total
+                done = int(item_progress[0])
+                total = int(item_progress[1])
+
+                if not self.ui.progressbar.maximum():
+                    self.ui.progressbar.setMaximum(total)
+
+                self.ui.progressbar.setValue(done)
 
         def on_finish(path: str, exit_code, exit_status):
             if exit_code:
@@ -376,11 +376,17 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
             else:
                 self.print(f'Preview generation of {path} finished.')
 
-            process = self.processes.pop(path)
+            process = self.processes.pop(0)
             process.close()
             process.deleteLater()
 
-            if not self.processes:  # All processes are finished
+            self.ui.dir_listwidget.takeItem(0)
+
+            if self.processes:
+                self.ui.progressbar.setMaximum(0)
+                self.ui.progress_label.setText(f"{len(self.directories) - len(self.processes) + 1}/{len(self.directories)}")
+                self.processes[0].start()
+            else:  # All processes are finished
                 self.directories.clear()
 
                 self.ui.dir_listwidget.clear()
@@ -399,6 +405,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
                 self.ui.action_button.setEnabled(False)
                 self.ui.add_button.setEnabled(True)
                 self.ui.progressbar.hide()
+                self.ui.progress_label.hide()
 
         for index, directory in enumerate(self.directories):
             arg_dir = os.path.abspath(directory).replace('\\', '/')
@@ -422,21 +429,21 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
             arguments = arguments + shlex.split(self.ui.param_edit.text())
 
-            self.print(f'Launch command: {self.generator} {" ".join(arguments)}')
+            process = QProcess(parent=self.main_window)
+            process.setProgram(self.generator)
+            process.setNativeArguments(' '.join(arguments))
 
-            self.processes[directory] = QProcess()
-            self.processes[directory].setProgram(self.generator)
-            self.processes[directory].setNativeArguments(' '.join(arguments))
+            process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+            process.readyReadStandardOutput.connect(partial(read_output, process, index))
+            process.finished.connect(partial(on_finish, str(directory)))
 
-            self.processes[directory].setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
-            self.processes[directory].readyReadStandardOutput.connect(partial(read_output, self.processes[directory], index))
-            self.processes[directory].finished.connect(partial(on_finish, str(directory)))
-
-            self.processes[directory].start()
+            self.processes.append(process)
 
         self.ui.action_button.hide()
         self.ui.add_button.setEnabled(False)
         self.ui.remove_button.setEnabled(False)
+
+        self.processes[0].start()
 
 
 def main():

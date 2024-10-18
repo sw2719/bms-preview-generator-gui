@@ -291,6 +291,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="progress_label">
+        <property name="text">
+         <string>0/0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="action_button">
         <property name="text">
          <string>Start</string>

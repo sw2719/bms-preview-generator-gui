@@ -93,7 +93,7 @@ class ExtractThread(QThread):
 
 
 class BmsPreviewAudioGeneratorGUI(QApplication):
-    def __init__(self, nocheck: bool):
+    def __init__(self, nocheck: bool, language: None | str):
         super().__init__(sys.argv)
         qdarktheme.setup_theme("auto")
 
@@ -106,7 +106,10 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         path = ':/translations'
         translator = QTranslator(self)
 
-        if translator.load(QLocale.system(), 'bmsgui', '_', path):
+        if language is None:
+            language = QLocale.system()
+
+        if translator.load(language, 'bmsgui', '_', path):
             self.installTranslator(translator)
 
         self.threads = []
@@ -448,8 +451,9 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--nocheck', action='store_true', help='Do not check for BmsPreviewAudioGenerator.exe')
+    parser.add_argument('-l', '--lang', help='Force language', required=False, default=None)
     args = parser.parse_args()
-    bms_gui = BmsPreviewAudioGeneratorGUI(args.nocheck)
+    bms_gui = BmsPreviewAudioGeneratorGUI(args.nocheck, args.lang)
     sys.exit(bms_gui.exec())
 
 

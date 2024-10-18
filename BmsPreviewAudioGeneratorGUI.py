@@ -358,9 +358,6 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
             progress = re.search(progress_pattern, decoded_string)
             if progress:
-                path = self.directories[item_index]
-                self.ui.dir_listwidget.item(item_index).setText(f'{path} - {progress.group(1)} ({progress.group(2)})')
-
                 item_progress = progress.group(1).split('/')  # format: done/total
                 done = int(item_progress[0])
                 total = int(item_progress[1])
@@ -370,7 +367,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
                 self.ui.progressbar.setValue(done)
 
-        def on_finish(path: str, exit_code, exit_status):
+        def on_finish(path: str, exit_code, _):
             if exit_code:
                 self.print(f'Preview generation of {path} failed.')
             else:
@@ -385,6 +382,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
             if self.processes:
                 self.ui.progressbar.setMaximum(0)
                 self.ui.progress_label.setText(f"{len(self.directories) - len(self.processes) + 1}/{len(self.directories)}")
+                self.print(f'Start process: {self.generator} {" ".join(self.processes[0].arguments())}')
                 self.processes[0].start()
             else:  # All processes are finished
                 self.directories.clear()
@@ -443,6 +441,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.add_button.setEnabled(False)
         self.ui.remove_button.setEnabled(False)
 
+        self.print(f'Start process: {self.generator} {" ".join(self.processes[0].arguments())}')
         self.processes[0].start()
 
 

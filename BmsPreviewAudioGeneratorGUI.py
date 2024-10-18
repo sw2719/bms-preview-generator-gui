@@ -15,7 +15,6 @@ import requests
 from functools import partial
 from typing import Dict, List
 
-from numpy.version import release
 from packaging import version
 from pefile import PE
 

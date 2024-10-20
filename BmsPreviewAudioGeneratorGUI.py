@@ -17,13 +17,12 @@ from typing import Dict, List
 
 from packaging import version
 from pefile import PE
+from pypdl import Pypdl
+from pypdl.utls import default_logger
 
 from PySide6.QtCore import Qt, QProcess, QLibraryInfo, QTranslator, QLocale, QThread, Signal, QIODevice, QFile, QTextStream
 from PySide6.QtWidgets import QApplication, QMainWindow, QListWidget, QMessageBox, QFileDialog, QWidget, QProgressDialog
 import qdarktheme
-from pypdl import Pypdl
-from pypdl.utls import default_logger
-from yt_dlp.plugins import directories
 
 from ui.ui_main import Ui_MainWindow
 from ui.ui_about import Ui_AboutForm
@@ -163,7 +162,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.action_button.clicked.connect(self.start)
 
         self.ui.thread_auto_checkbox.clicked.connect(
-            lambda: self.ui.thread_spinbox.setReadOnly(self.ui.thread_auto_checkbox.isChecked()))
+            self.on_thread_auto_checkbox)
 
         self.ui.start_edit.setText(DEFAULT_START)
         self.ui.end_edit.setText(DEFAULT_END)
@@ -446,6 +445,11 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.print(f'Start process: {self.generator} {" ".join(self.processes[0].arguments())}')
         self.processes[0].start()
+
+    def on_thread_auto_checkbox(self):
+        self.ui.thread_spinbox.setReadOnly(self.ui.thread_auto_checkbox.isChecked())
+        if self.ui.thread_auto_checkbox.isChecked():
+            self.ui.thread_spinbox.setValue(CORE_COUNT)
 
 
 def main():

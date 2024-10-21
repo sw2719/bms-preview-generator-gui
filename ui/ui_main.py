@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainErHnqT.ui'
+## Form generated from reading UI file 'mainkHCzXK.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.3
+## Created by: Qt User Interface Compiler version 6.5.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -35,6 +35,8 @@ class Ui_MainWindow(object):
         self.action_check_update.setObjectName(u"action_check_update")
         self.action_about = QAction(MainWindow)
         self.action_about.setObjectName(u"action_about")
+        self.action_update_gen = QAction(MainWindow)
+        self.action_update_gen.setObjectName(u"action_update_gen")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -205,6 +207,9 @@ class Ui_MainWindow(object):
 
         self.progress_label = QLabel(self.centralwidget)
         self.progress_label.setObjectName(u"progress_label")
+#if QT_CONFIG(tooltip)
+        self.progress_label.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
 
         self.horizontalLayout_4.addWidget(self.progress_label)
 
@@ -219,7 +224,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 500, 37))
+        self.menubar.setGeometry(QRect(0, 0, 500, 20))
         self.menu = QMenu(self.menubar)
         self.menu.setObjectName(u"menu")
         MainWindow.setMenuBar(self.menubar)
@@ -229,11 +234,15 @@ class Ui_MainWindow(object):
 
         self.menubar.addAction(self.menu.menuAction())
         self.menu.addAction(self.action_check_update)
+        self.menu.addAction(self.action_update_gen)
         self.menu.addAction(self.action_about)
         self.menu.addSeparator()
         self.menu.addAction(self.action_exit)
 
         self.retranslateUi(MainWindow)
+
+        self.action_button.setDefault(True)
+
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
@@ -243,6 +252,7 @@ class Ui_MainWindow(object):
         self.action_exit.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
         self.action_check_update.setText(QCoreApplication.translate("MainWindow", u"Check for updates", None))
         self.action_about.setText(QCoreApplication.translate("MainWindow", u"About", None))
+        self.action_update_gen.setText(QCoreApplication.translate("MainWindow", u"Check for generator updates", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Added directories", None))
         self.add_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))

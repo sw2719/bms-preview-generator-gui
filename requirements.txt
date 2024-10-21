@@ -2,3 +2,5 @@ PySide6
 requests
 packaging
 pyqtdarktheme-fork
+pefile
+pypdl

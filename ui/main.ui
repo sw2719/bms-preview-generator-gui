@@ -292,6 +292,9 @@
       </item>
       <item>
        <widget class="QLabel" name="progress_label">
+        <property name="toolTip">
+         <string notr="true"/>
+        </property>
         <property name="text">
          <string>0/0</string>
         </property>
@@ -301,6 +304,9 @@
        <widget class="QPushButton" name="action_button">
         <property name="text">
          <string>Start</string>
+        </property>
+        <property name="default">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -314,7 +320,7 @@
      <x>0</x>
      <y>0</y>
      <width>500</width>
-     <height>37</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -322,6 +328,7 @@
      <string>Menu</string>
     </property>
     <addaction name="action_check_update"/>
+    <addaction name="action_update_gen"/>
     <addaction name="action_about"/>
     <addaction name="separator"/>
     <addaction name="action_exit"/>
@@ -342,6 +349,11 @@
   <action name="action_about">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="action_update_gen">
+   <property name="text">
+    <string>Check for generator updates</string>
    </property>
   </action>
  </widget>

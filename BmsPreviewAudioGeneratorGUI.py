@@ -19,7 +19,7 @@ from typing import Dict, List
 from PySide6.QtGui import QFontDatabase
 from packaging import version
 from pypdl import Pypdl
-from pypdl.utls import default_logger
+from pypdl.utils import default_logger
 
 from PySide6.QtCore import Qt, QProcess, QLibraryInfo, QTranslator, QLocale, QThread, Signal, QIODevice, QFile, QTextStream
 from PySide6.QtWidgets import QApplication, QMainWindow, QListWidget, QMessageBox, QFileDialog, QWidget, QProgressDialog

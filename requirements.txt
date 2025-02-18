@@ -3,4 +3,4 @@ requests
 packaging
 pyqtdarktheme-fork
 pefile
-pypdl
+pypdl==1.4.4

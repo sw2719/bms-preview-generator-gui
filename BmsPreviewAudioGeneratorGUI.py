@@ -16,6 +16,7 @@ import ntpath
 from functools import partial
 from typing import Dict, List
 
+from PySide6.QtGui import QFontDatabase
 from packaging import version
 from pypdl import Pypdl
 from pypdl.utls import default_logger
@@ -107,7 +108,12 @@ class ExtractThread(QThread):
 class BmsPreviewAudioGeneratorGUI(QApplication):
     def __init__(self, nocheck: bool, language: None | str):
         super().__init__(sys.argv)
-        qdarktheme.setup_theme("auto")
+
+        QFontDatabase.addApplicationFont(f':/fonts/PretendardJP-Bold.ttf')
+        QFontDatabase.addApplicationFont(f':/fonts/PretendardJP-Light.ttf')
+        QFontDatabase.addApplicationFont(f':/fonts/PretendardJP-Regular.ttf')
+
+        qdarktheme.setup_theme("auto", additional_qss="* { font-family: Pretendard JP; }")
 
         path = QLibraryInfo.path(QLibraryInfo.TranslationsPath)
         translator = QTranslator(self)
@@ -407,6 +413,8 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         progress_pattern = r'(\d+\/\d+)\s+\((\d+\.\d+%)\)'
 
         def read_output(process: QProcess, item_index: int):
+            nonlocal progress_pattern
+
             data = process.readAllStandardOutput().data()
             decoded_string = data.decode('mbcs')
 
@@ -427,6 +435,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         def on_finish(path: str, exit_code, _):
             if exit_code:
                 self.print(f'Preview generation of {path} failed.')
+                QMessageBox.critical(self.main_window, self.tr('Error'), self.tr('Failed to generate preview of {0}').format(path))
             else:
                 self.print(f'Preview generation of {path} finished.')
 
@@ -489,7 +498,6 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
             process = QProcess(parent=self.main_window)
             process.setProgram(self.generator.path)
             process.setNativeArguments(' '.join(arguments))
-
             process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
             process.readyReadStandardOutput.connect(partial(read_output, process, index))
             process.finished.connect(partial(on_finish, str(directory)))
@@ -500,7 +508,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.add_button.setEnabled(False)
         self.ui.remove_button.setEnabled(False)
 
-        self.print(f'Start process: {self.generator} {" ".join(self.processes[0].arguments())}')
+        self.print(f'Start process: {self.generator} {self.processes[0].nativeArguments()}')
         self.processes[0].start()
 
     def on_thread_auto_checkbox(self):

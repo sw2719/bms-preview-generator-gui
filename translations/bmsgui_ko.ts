@@ -9,9 +9,13 @@
         <translation>정보</translation>
     </message>
     <message>
-        <location filename="../ui/about.ui" line="97"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Click &apos;View license&apos; to read this program and included softwares&apos; license.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;이 프로그램과 포함된 소프트웨어의 라이선스를 보려면 &apos;라이선스 보기&apos;를 누르십시오.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation type="vanished">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;이 프로그램과 포함된 소프트웨어의 라이선스를 보려면 &apos;라이선스 보기&apos;를 누르십시오.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../ui/about.ui" line="97"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;small&gt;Click &apos;View license&apos; to read this program and included fonts and softwares&apos; license.&lt;/small&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;small&gt;이 프로그램과 포함된 글꼴과 소프트웨어의 라이선스를 보려면 &apos;라이선스 보기&apos;를 누르십시오.&lt;/small&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../ui/about.ui" line="109"/>
@@ -40,7 +44,8 @@
 <context>
     <name>BmsPreviewAudioGeneratorGUI</name>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="250"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="256"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="438"/>
         <source>Error</source>
         <translation>오류</translation>
     </message>
@@ -59,140 +64,145 @@ Version {0}</source>
 버전 {0}</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="143"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="149"/>
         <source>Version {0}</source>
         <translation>버전 {0}</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="197"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="203"/>
         <source>nocheck is enabled.</source>
         <translation>nocheck 켜짐.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="204"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="210"/>
         <source>BmsPreviewAudioGenerator.exe not found. Download now?</source>
         <translation>BmsPreviewAudioGenerator를 찾을 수 없습니다. 지금 다운로드 할까요?</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="206"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="212"/>
         <source>BmsPreviewAudioGenerator.exe is required to generate audio previews.</source>
         <translation>미리듣기를 생성하기 위해서는 BmsPreviewAudioGenerator가 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="228"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="234"/>
         <source>Found BmsPreviewAudioGenerator.exe at {0}</source>
         <translation>BmsPreviewAudioGenerator 위치: {0}</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="229"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="235"/>
         <source>Detected version: {0}</source>
         <translation>감지된 버전: {0}</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="232"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="238"/>
         <source>Thread option unavailable. v0.9.9.7 or higher is required.</source>
         <translation>스레드 옵션을 사용할 수 없습니다. 버전 0.9.9.7 이상이 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="250"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="256"/>
         <source>Failed to download BmsPreviewAudioGenerator.
 Please try again or manually download.</source>
         <translation>BmsPreviewAudioGenerator를 다운로드할 수 없습니다.
 다시 시도하거나 직접 다운로드하세요.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="256"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="262"/>
         <source>Downloading {0}...</source>
         <translation>{0} 다운로드 중...</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="283"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="289"/>
         <source>Extracting...</source>
         <translation>압축 푸는 중...</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="313"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="319"/>
         <source>Generator update available</source>
         <translation>생성기 업데이트 사용 가능</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="314"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="320"/>
         <source>BmsPreviewGenerator {0} is available. Download now?</source>
         <translation>BmsPreviewAudioGenerator {0}을 사용할 수 있습니다. 지금 다운로드 할까요?</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="319"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="325"/>
         <source>BmsPreviewGenerator is up to date.</source>
         <translation>BmsPreviewAudioGenerator가 최신 버전입니다.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="322"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="328"/>
         <source>Failed to check for generator updates:
 {0}</source>
         <translation>생성기 업데이트를 확인하는 데 실패했습니다:
 {0}</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="334"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="340"/>
         <source>Update available</source>
         <translation>업데이트 사용 가능</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="335"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="341"/>
         <source>New version {0} is available. Open the release page?</source>
         <translation>새 버전({0})이 있습니다. 릴리즈 페이지를 열까요?</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="319"/>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="340"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="438"/>
+        <source>Failed to generate preview of {0}</source>
+        <translation>{0}의 미리듣기를 생성하는데 실패했습니다</translation>
+    </message>
+    <message>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="325"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="346"/>
         <source>No updates available</source>
         <translation>업데이트 없음</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="340"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="346"/>
         <source>You are using the latest version.</source>
         <translation>최신 버전을 사용하고 있습니다.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="322"/>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="343"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="328"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="349"/>
         <source>Failed to check for updates</source>
         <translation>업데이트 확인 실패</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="223"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="229"/>
         <source>Detecting BmsPreviewAudioGenerator...</source>
         <translation>BmsPreviewAudioGenerator 감지 중...</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="343"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="349"/>
         <source>Failed to check for updates:
 {0}</source>
         <translation>업데이트를 확인하는 데 실패했습니다:
 {0}</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="373"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="379"/>
         <source>Failed to add {0}: This is not a directory.</source>
         <translation>{0} 추가 실패: 디렉토리가 아닙니다.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="375"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="381"/>
         <source>Failed to add {0}: This directory is already added.</source>
         <translation>{0} 추가 실패: 이 디렉토리는 이미 추가됐습니다.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="377"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="383"/>
         <source>Failed to add {0}: Unknown error.</source>
         <translation>{0} 추가 실패: 알 수 없는 오류가 발생했습니다.</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="382"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="388"/>
         <source>Select a directory</source>
         <translation>디렉토리 선택</translation>
     </message>
     <message>
-        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="388"/>
+        <location filename="../BmsPreviewAudioGeneratorGUI.py" line="394"/>
         <source>Unable to generate because BmsPreviewAudioGenerator.exe was not found.</source>
         <translation>BmsPreviewAudioGenerator가 없기 때문에 생성할 수 없습니다.</translation>
     </message>

@@ -162,3 +162,5 @@ BmsPreviewAudioGenerator*/
 *dist/
 *build/
 *.zip
+
+/fonts

@@ -2,5 +2,8 @@
 <qresource>
     <file>translations/bmsgui_ko.qm</file>
     <file>ui/about_license.txt</file>
+    <file>fonts/PretendardJP-Bold.ttf</file>
+    <file>fonts/PretendardJP-Light.ttf</file>
+    <file>fonts/PretendardJP-Regular.ttf</file>
 </qresource>
 </RCC>

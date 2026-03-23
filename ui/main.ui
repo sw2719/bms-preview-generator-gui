@@ -78,6 +78,51 @@
      <widget class="DnDListWidget" name="dir_listwidget"/>
     </item>
     <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Preview file name</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="filename_edit">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="placeholderText">
+         <string notr="true">preview_auto_generated.ogg</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Thread</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="thread_spinbox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="thread_auto_checkbox">
+        <property name="text">
+         <string>Auto</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="options_layout">
       <item>
        <widget class="QLabel" name="label_3">
@@ -176,23 +221,6 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>File name</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="filename_edit">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="placeholderText">
-         <string notr="true">preview_auto_generated.ogg</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Custom arguments</string>
@@ -263,9 +291,22 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="progress_label">
+        <property name="toolTip">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>0/0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="action_button">
         <property name="text">
          <string>Start</string>
+        </property>
+        <property name="default">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -287,6 +328,7 @@
      <string>Menu</string>
     </property>
     <addaction name="action_check_update"/>
+    <addaction name="action_update_gen"/>
     <addaction name="action_about"/>
     <addaction name="separator"/>
     <addaction name="action_exit"/>
@@ -307,6 +349,11 @@
   <action name="action_about">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="action_update_gen">
+   <property name="text">
+    <string>Check for generator updates</string>
    </property>
   </action>
  </widget>

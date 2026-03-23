@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'aboutDhTDBL.ui'
+## Form generated from reading UI file 'aboutRNxVwU.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.5.0
 ##
@@ -23,14 +23,14 @@ class Ui_AboutForm(object):
     def setupUi(self, AboutForm):
         if not AboutForm.objectName():
             AboutForm.setObjectName(u"AboutForm")
-        AboutForm.resize(445, 228)
+        AboutForm.resize(459, 216)
         self.verticalLayout = QVBoxLayout(AboutForm)
         self.verticalLayout.setSpacing(5)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(10, 10, 10, 10)
         self.top_label = QLabel(AboutForm)
         self.top_label.setObjectName(u"top_label")
-        self.top_label.setText(u"<html><head/><body><p><span style=\" font-size:16pt; font-weight:700;\">BmsPreviewAudioGeneratorGUI</span></p></body></html>")
+        self.top_label.setText(u"<html><head/><body><p><h1>BmsPreviewAudioGeneratorGUI</h1></p></body></html>")
 
         self.verticalLayout.addWidget(self.top_label)
 
@@ -96,7 +96,7 @@ class Ui_AboutForm(object):
 
     def retranslateUi(self, AboutForm):
         AboutForm.setWindowTitle(QCoreApplication.translate("AboutForm", u"About", None))
-        self.label_3.setText(QCoreApplication.translate("AboutForm", u"<html><head/><body><p><span style=\" font-size:8pt;\">Click 'View license' to read this program and included softwares' license.</span></p></body></html>", None))
+        self.label_3.setText(QCoreApplication.translate("AboutForm", u"<html><head/><body><p><small>Click 'View license' to read this program and included fonts and softwares' license.</small></p></body></html>", None))
         self.github_button.setText(QCoreApplication.translate("AboutForm", u"Open GitHub repo", None))
         self.license_button.setText(QCoreApplication.translate("AboutForm", u"View license", None))
         self.close_button.setText(QCoreApplication.translate("AboutForm", u"Close", None))

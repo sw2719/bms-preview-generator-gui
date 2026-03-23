@@ -1,30 +1,41 @@
 # nuitka-project: --standalone
 # nuitka-project: --enable-plugin=pyside6
 # nuitka-project: --windows-console-mode=disable
-
+import shutil
 import sys
 import os
 import re
 import shlex
 import argparse
+import threading
+import time
+import zipfile
 import requests
+import ntpath
 
 from functools import partial
 from typing import Dict, List
+
+from PySide6.QtGui import QFontDatabase
 from packaging import version
+from pypdl import Pypdl
+from pypdl.utls import default_logger
 
 from PySide6.QtCore import Qt, QProcess, QLibraryInfo, QTranslator, QLocale, QThread, Signal, QIODevice, QFile, QTextStream
-from PySide6.QtWidgets import QApplication, QMainWindow, QListWidget, QMessageBox, QFileDialog, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QListWidget, QMessageBox, QFileDialog, QWidget, QProgressDialog
 import qdarktheme
 
 from ui.ui_main import Ui_MainWindow
 from ui.ui_about import Ui_AboutForm
 from ui.ui_license import Ui_LicenseForm
 
-import resources  # noqa
+import rc_resources  # noqa
+from util.github import get_latest_release, Release
+from util.pe import get_file_version
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 CHECK_API_URL = 'https://api.github.com/repos/sw2719/bms-preview-generator-gui/releases/latest'
+BMS_GEN_API_URL = "https://api.github.com/repos/MikiraSora/BmsPreviewAudioGenerator/releases/latest"
 RELEASES_URL = 'https://github.com/sw2719/bms-preview-generator-gui/releases'
 REPO_URL = 'https://github.com/sw2719/bms-preview-generator-gui'
 
@@ -33,37 +44,76 @@ DEFAULT_END = '40000'
 DEFAULT_FADE_IN = '1000'
 DEFAULT_FADE_OUT = '2000'
 DEFAULT_FILE_NAME = "preview_auto_generated.ogg"
+CURRENT_PATH = ntpath.dirname(ntpath.abspath(__file__))
+CORE_COUNT = os.cpu_count()
 
 
-def get_generator():
-    for directory in os.listdir(os.path.dirname(__file__)):
-        if os.path.isdir(directory) and 'BmsPreviewAudioGenerator.exe' in os.listdir(directory):
-            path = os.path.join(directory, 'BmsPreviewAudioGenerator.exe')
-            print(path)
-            return path
-    else:
-        return None
+class Generator:
+    def __init__(self, path: str, version: version.Version):
+        self.path = path
+        self.version = version
+
+    def __str__(self):
+        return self.path
 
 
-class UpdateThread(QThread):
-    completed = Signal(bool, str, Exception)
+class UpdateCheckThread(QThread):
+    completed = Signal(bool, Release, Exception)
+
+    def __init__(self, *args, url: str, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.url = url
 
     def run(self):
         try:
-            response = requests.get(CHECK_API_URL)
-            response.raise_for_status()
-            data = response.json()
-            new_version = data['tag_name']
-            self.completed.emit(True, new_version, None)
+            release = get_latest_release(self.url)
+            self.completed.emit(True, release, None)
 
         except (requests.RequestException, requests.JSONDecodeError) as e:
             self.completed.emit(False, "", e)
 
 
+class ExtractThread(QThread):
+    completed = Signal(bool)
+
+    def __init__(self, zip_path: str, del_path: None | str, **kwargs):
+        super().__init__(**kwargs)
+        self.zip_path = zip_path
+        self.del_path = del_path
+
+    def run(self):
+        print('Extract thread start')
+
+        if self.del_path:
+            shutil.rmtree(self.del_path, ignore_errors=False)
+
+        zip_name = ntpath.basename(self.zip_path)
+        i = zip_name.rfind(".")
+        dir_name = zip_name[:i]
+
+        while True:
+            try:
+                with zipfile.ZipFile(self.zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(f"{CURRENT_PATH}/{dir_name}/")
+                break
+
+            except zipfile.BadZipFile:
+                time.sleep(1)
+                continue
+
+        os.remove(self.zip_path)
+        self.completed.emit(True)
+
+
 class BmsPreviewAudioGeneratorGUI(QApplication):
-    def __init__(self, nocheck: bool):
+    def __init__(self, nocheck: bool, language: None | str):
         super().__init__(sys.argv)
-        qdarktheme.setup_theme("auto")
+
+        QFontDatabase.addApplicationFont(f':/fonts/PretendardJP-Bold.ttf')
+        QFontDatabase.addApplicationFont(f':/fonts/PretendardJP-Light.ttf')
+        QFontDatabase.addApplicationFont(f':/fonts/PretendardJP-Regular.ttf')
+
+        qdarktheme.setup_theme("auto", additional_qss="* { font-family: Pretendard JP; }")
 
         path = QLibraryInfo.path(QLibraryInfo.TranslationsPath)
         translator = QTranslator(self)
@@ -74,8 +124,13 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         path = ':/translations'
         translator = QTranslator(self)
 
-        if translator.load(QLocale.system(), 'bmsgui', '_', path):
+        if language is None:
+            language = QLocale.system()
+
+        if translator.load(language, 'bmsgui', '_', path):
             self.installTranslator(translator)
+
+        self.threads = []
 
         self.main_window = QMainWindow()
 
@@ -84,23 +139,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.main_window.setWindowTitle(self.main_window.windowTitle() + f' (Version {VERSION})')
 
         self.directories: List[str] = []
-        self.processes: Dict[str, QProcess] = {}
-
-        self.generator = get_generator()
-
-        if not self.generator and not nocheck:
-            msgbox = QMessageBox()
-            msgbox.setIcon(QMessageBox.Icon.Critical)
-            msgbox.setWindowTitle(self.tr('Error'))
-            msgbox.setTextFormat(Qt.TextFormat.RichText)
-
-            msgbox.setText(self.tr(
-                "BmsPreviewAudioGenerator.exe not found.<br>"
-                "Refer to <a href='{0}'>GitHub README</a> for more information.<br><br>"
-                "Program will now exit.").format(REPO_URL))
-
-            msgbox.exec()
-            sys.exit(1)
+        self.processes: List[QProcess] = []
 
         self.ui.output_textedit.setReadOnly(True)
 
@@ -124,6 +163,7 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
             f.close()
 
         self.ui.action_check_update.triggered.connect(self.check_for_updates)
+        self.ui.action_update_gen.triggered.connect(self.check_for_generator_updates)
         self.ui.action_about.triggered.connect(self.about_window.show)
         self.ui.action_exit.triggered.connect(self.exit)
 
@@ -141,22 +181,41 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
         self.ui.action_button.setEnabled(False)
         self.ui.action_button.clicked.connect(self.start)
 
+        self.ui.thread_auto_checkbox.clicked.connect(
+            self.on_thread_auto_checkbox)
+
         self.ui.start_edit.setText(DEFAULT_START)
         self.ui.end_edit.setText(DEFAULT_END)
         self.ui.fade_in_edit.setText(DEFAULT_FADE_IN)
         self.ui.fade_out_edit.setText(DEFAULT_FADE_OUT)
         self.ui.filename_edit.setText(DEFAULT_FILE_NAME)
+        self.ui.thread_spinbox.setValue(CORE_COUNT)
         self.ui.param_edit.setText('')
 
         self.ui.progressbar.hide()
+        self.ui.progress_label.hide()
+
+        self.generator = None
+        self.use_thread = False
+        self.get_generator()
 
         if nocheck:
             self.print(self.tr('nocheck is enabled.'))
 
-        if self.generator:
-            self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
-        else:
-            self.print(self.tr('BmsPreviewAudioGenerator.exe was not found.'))
+        if not self.generator and not nocheck:
+            msgbox = QMessageBox(parent=self.main_window)
+            msgbox.setIcon(QMessageBox.Icon.Warning)
+
+            msgbox.setText(self.tr(
+                "BmsPreviewAudioGenerator.exe not found. Download now?"))
+            msgbox.setInformativeText(self.tr(
+                "BmsPreviewAudioGenerator.exe is required to generate audio previews."))
+            msgbox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+
+            if msgbox.exec() == QMessageBox.StandardButton.Yes:
+                self.download_generator()
+            else:
+                sys.exit(1)
 
         self.main_window.show()
 
@@ -166,14 +225,120 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
     def clear(self):
         self.ui.output_textedit.clear()
 
-    def check_for_updates(self):
-        update_thread = UpdateThread(self)
+    def get_generator(self) -> None:
+        self.print(self.tr("Detecting BmsPreviewAudioGenerator..."))
+        for directory in os.listdir(CURRENT_PATH):
+            if ntpath.isdir(directory) and 'BmsPreviewAudioGenerator.exe' in os.listdir(directory):
+                path = ntpath.abspath(ntpath.join(directory, 'BmsPreviewAudioGenerator.exe'))
+                self.generator = Generator(path, get_file_version(path))
+                self.print(self.tr('Found BmsPreviewAudioGenerator.exe at {0}').format(self.generator))
+                self.print(self.tr('Detected version: {0}').format(self.generator.version))
 
-        def on_check_complete(check_success, new_version, exc):
+                if self.generator.version < version.parse('0.9.9.7'):
+                    self.print(self.tr('Thread option unavailable. v0.9.9.7 or higher is required.'))
+                    self.ui.thread_auto_checkbox.setEnabled(False)
+                    self.ui.thread_spinbox.setEnabled(False)
+                    self.use_thread = False
+                else:
+                    self.ui.thread_auto_checkbox.setEnabled(True)
+                    self.ui.thread_spinbox.setEnabled(True)
+                    self.ui.thread_auto_checkbox.setChecked(True)
+                    self.ui.thread_spinbox.setReadOnly(True)
+                    self.ui.thread_spinbox.setValue(CORE_COUNT)
+                    self.use_thread = True
+
+    def download_generator(self):
+
+        try:
+            release = get_latest_release(BMS_GEN_API_URL)
+
+        except requests.HTTPError:
+            QMessageBox.critical(self.main_window, self.tr('Error'), self.tr('Failed to download BmsPreviewAudioGenerator.\nPlease try again or manually download.'))
+            sys.exit(1)
+
+        file_name = release['asset_name']
+        url = release['asset_url']
+
+        progress = QProgressDialog(self.tr("Downloading {0}...").format(file_name), "", 0, 100, parent=self.main_window)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setCancelButton(None)
+        progress.forceShow()
+
+        dl = Pypdl(allow_reuse=False, logger=default_logger("Pypdl"))
+        dl.start(
+            url=url,
+            file_path=CURRENT_PATH,
+            segments=4,
+            display=False,
+            multisegment=False,
+            block=False,
+            retries=0,
+            mirror_func=None,
+            etag=True,
+            overwrite=True
+        )
+
+        # print the progress
+        while dl.progress < 100:
+            progress.setValue(dl.progress)
+            if progress.wasCanceled():
+                dl.stop()
+                sys.exit()
+
+        progress.setValue(99)
+        progress.setLabelText(self.tr("Extracting..."))
+
+        def on_extract_finish():
+            nonlocal progress
+            nonlocal extract_thread
+
+            # do cleanup stuff
+            progress.accept()
+            self.threads.remove(extract_thread)
+            extract_thread.deleteLater()
+            self.get_generator()
+
+        if self.generator:
+            del_path = ntpath.dirname(self.generator.path)
+        else:
+            del_path = None
+
+        extract_thread = ExtractThread(f"{CURRENT_PATH}/{file_name}", del_path)
+        extract_thread.completed.connect(on_extract_finish)
+        extract_thread.start()
+
+        self.threads.append(extract_thread)
+
+    def check_for_generator_updates(self):
+        update_thread = UpdateCheckThread(parent=self, url=BMS_GEN_API_URL)
+
+        def on_check_complete(check_success, latest_release: Release, exc):
             if check_success:
-                if version.parse(new_version) > version.parse(VERSION):
+                latest_version = latest_release["version"]
+                if version.parse(latest_version) > self.generator.version:
+                    reply = QMessageBox.question(self.main_window, self.tr('Generator update available'),
+                                                 self.tr('BmsPreviewGenerator {0} is available. Download now?').format(latest_version),
+                                                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                    if reply == QMessageBox.StandardButton.Yes:
+                        self.download_generator()
+                else:
+                    QMessageBox.information(self.main_window, self.tr('No updates available'), self.tr('BmsPreviewGenerator is up to date.'))
+            else:
+                exception_string = str(exc)
+                QMessageBox.critical(self.main_window, self.tr('Failed to check for updates'), self.tr("Failed to check for generator updates:\n{0}").format(exception_string))
+
+        update_thread.completed.connect(on_check_complete)
+        update_thread.start()
+
+    def check_for_updates(self):
+        update_thread = UpdateCheckThread(parent=self, url=CHECK_API_URL)
+
+        def on_check_complete(check_success: bool, latest_release: Release, exc):
+            if check_success:
+                latest_version = latest_release["version"]
+                if version.parse(latest_version) > version.parse(VERSION):
                     reply = QMessageBox.question(self.main_window, self.tr('Update available'),
-                                                 self.tr('New version {0} is available. Open the release page?').format(new_version),
+                                                 self.tr('New version {0} is available. Open the release page?').format(latest_version),
                                                  QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                     if reply == QMessageBox.StandardButton.Yes:
                         os.startfile(RELEASES_URL)
@@ -207,10 +372,10 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
     def add_directories(self, directories: List[str]):
         for directory in directories:
-            if os.path.isdir(directory) and directory not in self.directories:
+            if ntpath.isdir(directory) and directory not in self.directories:
                 self.directories.append(directory)
                 self.ui.dir_listwidget.addItem(directory)
-            elif not os.path.isdir(directory):
+            elif not ntpath.isdir(directory):
                 self.print(self.tr('Failed to add {0}: This is not a directory.').format(directory))
             elif directory in self.directories:
                 self.print(self.tr('Failed to add {0}: This directory is already added.').format(directory))
@@ -243,19 +408,13 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
         self.ui.progressbar.setMaximum(0)
         self.ui.progressbar.show()
+        self.ui.progress_label.setText(f"1/{len(self.directories)}")
+        self.ui.progress_label.show()
         progress_pattern = r'(\d+\/\d+)\s+\((\d+\.\d+%)\)'
-        progresses = {}
-
-        def update_progressbar():
-            if len(progresses) == len(self.directories):
-                if not self.ui.progressbar.maximum():
-                    total = sum([int(p.split('/')[1]) for p in progresses.values()])
-                    self.ui.progressbar.setMaximum(total)
-
-                progress = sum([int(p.split('/')[0]) for p in progresses.values()])
-                self.ui.progressbar.setValue(progress)
 
         def read_output(process: QProcess, item_index: int):
+            nonlocal progress_pattern
+
             data = process.readAllStandardOutput().data()
             decoded_string = data.decode('mbcs')
 
@@ -264,23 +423,34 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
 
             progress = re.search(progress_pattern, decoded_string)
             if progress:
-                path = self.directories[item_index]
-                self.ui.dir_listwidget.item(item_index).setText(f'{path} - {progress.group(1)} ({progress.group(2)})')
+                item_progress = progress.group(1).split('/')  # format: done/total
+                done = int(item_progress[0])
+                total = int(item_progress[1])
 
-                progresses[path] = progress.group(1)
-                update_progressbar()
+                if not self.ui.progressbar.maximum():
+                    self.ui.progressbar.setMaximum(total)
 
-        def on_finish(path: str, exit_code, exit_status):
+                self.ui.progressbar.setValue(done)
+
+        def on_finish(path: str, exit_code, _):
             if exit_code:
                 self.print(f'Preview generation of {path} failed.')
+                QMessageBox.critical(self.main_window, self.tr('Error'), self.tr('Failed to generate preview of {0}').format(path))
             else:
                 self.print(f'Preview generation of {path} finished.')
 
-            process = self.processes.pop(path)
+            process = self.processes.pop(0)
             process.close()
             process.deleteLater()
 
-            if not self.processes:  # All processes are finished
+            self.ui.dir_listwidget.takeItem(0)
+
+            if self.processes:
+                self.ui.progressbar.setMaximum(0)
+                self.ui.progress_label.setText(f"{len(self.directories) - len(self.processes) + 1}/{len(self.directories)}")
+                self.print(f'Start process: {self.generator} {" ".join(self.processes[0].arguments())}')
+                self.processes[0].start()
+            else:  # All processes are finished
                 self.directories.clear()
 
                 self.ui.dir_listwidget.clear()
@@ -299,9 +469,10 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
                 self.ui.action_button.setEnabled(False)
                 self.ui.add_button.setEnabled(True)
                 self.ui.progressbar.hide()
+                self.ui.progress_label.hide()
 
         for index, directory in enumerate(self.directories):
-            arg_dir = os.path.abspath(directory).replace('\\', '/')
+            arg_dir = ntpath.abspath(directory).replace('\\', '/')
             start = self.ui.start_edit.text()
             end = self.ui.end_edit.text()
             fade_in = self.ui.fade_in_edit.text()
@@ -319,30 +490,39 @@ class BmsPreviewAudioGeneratorGUI(QApplication):
                 f'-fade_out="{fade_out}"'
             ]
 
+            if self.use_thread:
+                arguments.append(f'-thread="{self.ui.thread_spinbox.value()}"')
+
             arguments = arguments + shlex.split(self.ui.param_edit.text())
 
-            self.print(f'Launch command: {self.generator} {" ".join(arguments)}')
+            process = QProcess(parent=self.main_window)
+            process.setProgram(self.generator.path)
+            process.setNativeArguments(' '.join(arguments))
+            process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+            process.readyReadStandardOutput.connect(partial(read_output, process, index))
+            process.finished.connect(partial(on_finish, str(directory)))
 
-            self.processes[directory] = QProcess()
-            self.processes[directory].setProgram(self.generator)
-            self.processes[directory].setNativeArguments(' '.join(arguments))
-
-            self.processes[directory].setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
-            self.processes[directory].readyReadStandardOutput.connect(partial(read_output, self.processes[directory], index))
-            self.processes[directory].finished.connect(partial(on_finish, str(directory)))
-
-            self.processes[directory].start()
+            self.processes.append(process)
 
         self.ui.action_button.hide()
         self.ui.add_button.setEnabled(False)
         self.ui.remove_button.setEnabled(False)
 
+        self.print(f'Start process: {self.generator} {self.processes[0].nativeArguments()}')
+        self.processes[0].start()
+
+    def on_thread_auto_checkbox(self):
+        self.ui.thread_spinbox.setReadOnly(self.ui.thread_auto_checkbox.isChecked())
+        if self.ui.thread_auto_checkbox.isChecked():
+            self.ui.thread_spinbox.setValue(CORE_COUNT)
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--nocheck', action='store_true', help='Do not check for BmsPreviewAudioGenerator.exe')
+    parser.add_argument('-l', '--lang', help='Force language', required=False, default=None)
     args = parser.parse_args()
-    bms_gui = BmsPreviewAudioGeneratorGUI(args.nocheck)
+    bms_gui = BmsPreviewAudioGeneratorGUI(args.nocheck, args.lang)
     sys.exit(bms_gui.exec())
 
 

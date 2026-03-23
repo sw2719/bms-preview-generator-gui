@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainUfTNBG.ui'
+## Form generated from reading UI file 'mainkHCzXK.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.5.0
 ##
@@ -16,10 +16,11 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QLineEdit,
-    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
-    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy,
-    QSpacerItem, QStatusBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QLabel,
+    QLineEdit, QListWidgetItem, QMainWindow, QMenu,
+    QMenuBar, QPlainTextEdit, QProgressBar, QPushButton,
+    QSizePolicy, QSpacerItem, QSpinBox, QStatusBar,
+    QVBoxLayout, QWidget)
 
 from ui.dnd_listwidget import DnDListWidget
 
@@ -34,6 +35,8 @@ class Ui_MainWindow(object):
         self.action_check_update.setObjectName(u"action_check_update")
         self.action_about = QAction(MainWindow)
         self.action_about.setObjectName(u"action_about")
+        self.action_update_gen = QAction(MainWindow)
+        self.action_update_gen.setObjectName(u"action_update_gen")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -70,6 +73,39 @@ class Ui_MainWindow(object):
         self.dir_listwidget.setObjectName(u"dir_listwidget")
 
         self.verticalLayout.addWidget(self.dir_listwidget)
+
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.label_8 = QLabel(self.centralwidget)
+        self.label_8.setObjectName(u"label_8")
+
+        self.horizontalLayout_5.addWidget(self.label_8)
+
+        self.filename_edit = QLineEdit(self.centralwidget)
+        self.filename_edit.setObjectName(u"filename_edit")
+        self.filename_edit.setPlaceholderText(u"preview_auto_generated.ogg")
+
+        self.horizontalLayout_5.addWidget(self.filename_edit)
+
+        self.label_9 = QLabel(self.centralwidget)
+        self.label_9.setObjectName(u"label_9")
+
+        self.horizontalLayout_5.addWidget(self.label_9)
+
+        self.thread_spinbox = QSpinBox(self.centralwidget)
+        self.thread_spinbox.setObjectName(u"thread_spinbox")
+        self.thread_spinbox.setReadOnly(True)
+
+        self.horizontalLayout_5.addWidget(self.thread_spinbox)
+
+        self.thread_auto_checkbox = QCheckBox(self.centralwidget)
+        self.thread_auto_checkbox.setObjectName(u"thread_auto_checkbox")
+        self.thread_auto_checkbox.setChecked(True)
+
+        self.horizontalLayout_5.addWidget(self.thread_auto_checkbox)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_5)
 
         self.options_layout = QHBoxLayout()
         self.options_layout.setObjectName(u"options_layout")
@@ -122,17 +158,6 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.label_8 = QLabel(self.centralwidget)
-        self.label_8.setObjectName(u"label_8")
-
-        self.horizontalLayout_3.addWidget(self.label_8)
-
-        self.filename_edit = QLineEdit(self.centralwidget)
-        self.filename_edit.setObjectName(u"filename_edit")
-        self.filename_edit.setPlaceholderText(u"preview_auto_generated.ogg")
-
-        self.horizontalLayout_3.addWidget(self.filename_edit)
-
         self.label_7 = QLabel(self.centralwidget)
         self.label_7.setObjectName(u"label_7")
 
@@ -180,6 +205,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4.addWidget(self.progressbar)
 
+        self.progress_label = QLabel(self.centralwidget)
+        self.progress_label.setObjectName(u"progress_label")
+#if QT_CONFIG(tooltip)
+        self.progress_label.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
+
+        self.horizontalLayout_4.addWidget(self.progress_label)
+
         self.action_button = QPushButton(self.centralwidget)
         self.action_button.setObjectName(u"action_button")
 
@@ -201,11 +234,15 @@ class Ui_MainWindow(object):
 
         self.menubar.addAction(self.menu.menuAction())
         self.menu.addAction(self.action_check_update)
+        self.menu.addAction(self.action_update_gen)
         self.menu.addAction(self.action_about)
         self.menu.addSeparator()
         self.menu.addAction(self.action_exit)
 
         self.retranslateUi(MainWindow)
+
+        self.action_button.setDefault(True)
+
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
@@ -215,9 +252,16 @@ class Ui_MainWindow(object):
         self.action_exit.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
         self.action_check_update.setText(QCoreApplication.translate("MainWindow", u"Check for updates", None))
         self.action_about.setText(QCoreApplication.translate("MainWindow", u"About", None))
+        self.action_update_gen.setText(QCoreApplication.translate("MainWindow", u"Check for generator updates", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Added directories", None))
         self.add_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Preview file name", None))
+#if QT_CONFIG(tooltip)
+        self.filename_edit.setToolTip("")
+#endif // QT_CONFIG(tooltip)
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Thread", None))
+        self.thread_auto_checkbox.setText(QCoreApplication.translate("MainWindow", u"Auto", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Start", None))
 #if QT_CONFIG(tooltip)
         self.start_edit.setToolTip("")
@@ -242,16 +286,13 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.fade_out_edit.setInputMask("")
         self.fade_out_edit.setText("")
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"File name", None))
-#if QT_CONFIG(tooltip)
-        self.filename_edit.setToolTip("")
-#endif // QT_CONFIG(tooltip)
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Custom arguments", None))
 #if QT_CONFIG(tooltip)
         self.param_edit.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.param_edit.setPlaceholderText("")
         self.label.setText(QCoreApplication.translate("MainWindow", u"Output", None))
+        self.progress_label.setText(QCoreApplication.translate("MainWindow", u"0/0", None))
         self.action_button.setText(QCoreApplication.translate("MainWindow", u"Start", None))
         self.menu.setTitle(QCoreApplication.translate("MainWindow", u"Menu", None))
     # retranslateUi

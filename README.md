@@ -10,9 +10,7 @@ This is a GUI frontend for [MikiraSora's BmsPreviewAudioGenerator](https://githu
 # Usage
 1. Download [BmsPreviewAudioGenerator](https://github.com/MikiraSora/BmsPreviewAudioGenerator/releases/latest) and [this program](https://github.com/sw2719/bms-preview-generator-gui/releases/latest).
     - .NET Core 3.1 is required for BmsPreviewAudioGenerator. If you don't have it installed, you can download it [here](https://dotnet.microsoft.com/download/dotnet-core/3.1).
-2. Unzip this program first.
-3. Unzip BmsPreviewAudioGenerator folder inside program directory (where BmsPreviewAudioGeneratorGUI.exe is located).
-    - The BmsPreviewAudioGenerator folder should be inside the program directory, not its contents.
+2. Unzip the downloaded archive.
 4. Run BmsPreviewAudioGeneratorGUI.exe.
 5. Add directories containg BMS. You can just drag and drop folders inside the directory list. Alternatively, click 'Add' button to open folder dialog if you prefer it that way.
 6. Adjust generator options if needed, and click 'Start' button.

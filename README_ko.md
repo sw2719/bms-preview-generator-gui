@@ -13,5 +13,4 @@
     - BmsPreviewAudioGenerator 폴더의 파일들이 아닌 폴더 자체가 BmsPreviewAudioGeneratorGUI.exe와 같은 디렉토리에 있어야 합니다.
 4. BmsPreviewAudioGeneratorGUI.exe를 실행하세요.
 5. BMS 폴더를 추가하세요. 리스트에 폴더를 끌어다 놓을 수도 있고, '추가' 버튼을 누르면 폴더 선택 창이 나타납니다.
-   - 미리듣기 파일은 폴더 별로 병렬 생성되므로 가능한 한 폴더를 잘게 나누어 추가하는 것이 빠릅니다.
 6. 필요한 경우 생성기 설정을 조정하고, '시작' 버튼을 누르세요.
